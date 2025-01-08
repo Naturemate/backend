@@ -30,8 +30,8 @@ jobs:
     # Step 4: Build and Push Docker Image
     - name: Build and Push Docker Image
       run: |
-        docker build -t naturemate/backend:latest .
-        docker push naturemate/backend:latest
+        docker build -t pumplearn/backend:latest .
+        docker push pumplearn/backend:latest
 
     # Step 5: Deploy to EC2 via SSH
     - name: Deploy to EC2
@@ -47,7 +47,7 @@ jobs:
           docker rm backend || true
 
           # Pull the latest Docker image
-          docker pull naturemate/backend:latest
+          docker pull pumplearn/backend:latest
 
           # Run the Docker container
-          docker run -d --name backend -p 8080:8080 naturemate/backend:latest
+          docker run -d --name backend -p 8080:8080 pumplearn/backend:latest
