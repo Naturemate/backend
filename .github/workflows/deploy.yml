@@ -4,6 +4,7 @@ name: Deploy Backend to EC2
 #   push:
 #     branches:
 #       - main  # Trigger the workflow on push to the `main` branch
+
 on:
   workflow_dispatch:  # Manual trigger for this workflow
 
@@ -30,10 +31,30 @@ jobs:
     # Step 4: Build and Push Docker Image
     - name: Build and Push Docker Image
       run: |
+        echo "Building and pushing Docker image..."
         docker build -t pumplearn/backend:latest .
         docker push pumplearn/backend:latest
 
-    # Step 5: Deploy to EC2 via SSH
+    # Step 5: Get Runner's Public IP Address
+    - name: Get Runner IP Address
+      id: ip
+      uses: haythem/public-ip@v1.2
+
+    # Step 6: Whitelist Runner's IP Address in EC2 Security Group
+    - name: Whitelist Runner IP
+      run: |
+        echo "Whitelisting runner IP: ${{ steps.ip.outputs.ipv4 }}"
+        aws ec2 authorize-security-group-ingress \
+          --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+          --protocol tcp \
+          --port 22 \
+          --cidr ${{ steps.ip.outputs.ipv4 }}/32
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+
+    # Step 7: Deploy to EC2 via SSH
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v0.1.6
       with:
@@ -42,12 +63,26 @@ jobs:
         key: ${{ secrets.EC2_SSH_KEY }}
         port: 22
         script: |
-          # Stop and remove existing container
+          echo "Stopping and removing existing Docker container..."
           docker stop backend || true
           docker rm backend || true
 
-          # Pull the latest Docker image
+          echo "Pulling the latest Docker image..."
           docker pull pumplearn/backend:latest
 
-          # Run the Docker container
+          echo "Running the Docker container..."
           docker run -d --name backend -p 8080:8080 pumplearn/backend:latest
+
+    # Step 8: Revoke Runner's IP Address from EC2 Security Group
+    - name: Revoke Runner IP
+      run: |
+        echo "Revoking runner IP: ${{ steps.ip.outputs.ipv4 }}"
+        aws ec2 revoke-security-group-ingress \
+          --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+          --protocol tcp \
+          --port 22 \
+          --cidr ${{ steps.ip.outputs.ipv4 }}/32
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
