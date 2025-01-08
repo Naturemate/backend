@@ -1,0 +1,35 @@
+name: Debug SSH Connection to EC2
+
+on:
+  workflow_dispatch:  # Trigger this workflow manually
+
+jobs:
+  debug-ssh:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Debug SSH Key Format
+    - name: Check SSH Key Format
+      run: |
+        echo "Checking SSH key format..."
+        echo "${{ secrets.EC2_SSH_KEY }}" | head -n 2 || echo "Key not found or improperly formatted"
+        echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
+        chmod 600 private_key.pem
+        ssh-keygen -y -f private_key.pem > public_key.pub
+        echo "Extracted public key:"
+        cat public_key.pub
+
+    # Step 2: Attempt SSH Connection
+    - name: Test SSH Connection
+      run: |
+        echo "Attempting SSH connection to EC2 instance..."
+        echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
+        chmod 600 private_key.pem
+        ssh -i private_key.pem -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} "echo 'Connection successful!'"
+
+    # Step 3: Debugging Output
+    - name: Print Debug Information
+      run: |
+        echo "EC2_HOST: ${{ secrets.EC2_HOST }}"
+        echo "SSH Key Permissions:"
+        ls -l private_key.pem || echo "Private key not found"
