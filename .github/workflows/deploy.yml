@@ -35,24 +35,47 @@ jobs:
         docker build -t pumplearn/backend:latest .
         docker push pumplearn/backend:latest
 
-    # Step 5: Get Runner's Public IP Address
-    - name: Get Runner IP Address
-      id: ip
-      uses: haythem/public-ip@v1.2
-
+    # # Step 5: Get Runner's Public IP Address
+    # - name: Get Runner IP Address
+    #   id: ip
+    #   uses: haythem/public-ip@v1.2
+      
     # Step 6: Whitelist Runner's IP Address in EC2 Security Group
     - name: Whitelist Runner IP
-      run: |
-        echo "Whitelisting runner IP: ${{ steps.ip.outputs.ipv4 }}"
-        aws ec2 authorize-security-group-ingress \
-          --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
-          --protocol tcp \
-          --port 22 \
-          --cidr ${{ steps.ip.outputs.ipv4 }}/32
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
+    env:
+      AWS_INSTANCE_SG_ID: ${{ secrets.EC2_SECURITY_GROUP_ID }}
+      steps:
+      - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      - name: get runner ip address
+        id: ip
+        uses: haythem/public-ip@v1.2
+      - name: whitelist runner ip address
+        run: |
+          aws ec2 authorize-security-group-ingress \
+            --group-id $AWS_INSTANCE_SG_ID \
+            --protocol tcp \
+            --port 22 \
+            --cidr ${{ steps.ip.outputs.ipv4 }}/32
+
+            
+    # # Step 6: Whitelist Runner's IP Address in EC2 Security Group
+    # - name: Whitelist Runner IP
+    #   run: |
+    #     echo "Whitelisting runner IP: ${{ steps.ip.outputs.ipv4 }}"
+    #     aws ec2 authorize-security-group-ingress \
+    #       --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+    #       --protocol tcp \
+    #       --port 22 \
+    #       --cidr ${{ steps.ip.outputs.ipv4 }}/32
+    #   env:
+    #     AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #     AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #     AWS_DEFAULT_REGION: ${{ secrets.AWS_REGION }}
 
     # Step 7: Deploy to EC2 via SSH
     - name: Deploy to EC2
