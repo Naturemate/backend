@@ -1,35 +1,28 @@
-name: Debug SSH Connection to EC2
+name: Debug SSH Connection
 
 on:
-  workflow_dispatch:  # Trigger this workflow manually
+  workflow_dispatch: # Manually triggered
 
 jobs:
   debug-ssh:
     runs-on: ubuntu-latest
 
     steps:
-    # Step 1: Debug SSH Key Format
-    - name: Check SSH Key Format
-      run: |
-        echo "Checking SSH key format..."
-        echo "${{ secrets.EC2_SSH_KEY }}" | head -n 2 || echo "Key not found or improperly formatted"
-        echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
-        chmod 600 private_key.pem
-        ssh-keygen -y -f private_key.pem > public_key.pub
-        echo "Extracted public key:"
-        cat public_key.pub
-
-    # Step 2: Attempt SSH Connection
-    - name: Test SSH Connection
-      run: |
-        echo "Attempting SSH connection to EC2 instance..."
-        echo "${{ secrets.EC2_SSH_KEY }}" > private_key.pem
-        chmod 600 private_key.pem
-        ssh -i private_key.pem -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} "echo 'Connection successful!'"
-
-    # Step 3: Debugging Output
-    - name: Print Debug Information
+    # Step 1: Print EC2_HOST and EC2_SSH_KEY details
+    - name: Print Debug Info
       run: |
         echo "EC2_HOST: ${{ secrets.EC2_HOST }}"
-        echo "SSH Key Permissions:"
-        ls -l private_key.pem || echo "Private key not found"
+        echo "EC2_SSH_KEY (first 5 lines):"
+        echo "${{ secrets.EC2_SSH_KEY }}" | head -n 5
+
+    # Step 2: Write the SSH key to a file for use in SSH command
+    - name: Write SSH Key to File
+      run: |
+        echo "${{ secrets.EC2_SSH_KEY }}" > ec2_key.pem
+        chmod 600 ec2_key.pem
+
+    # Step 3: Test SSH Connection
+    - name: Test SSH Connection
+      run: |
+        echo "Testing SSH connection to ${{ secrets.EC2_HOST }}..."
+        ssh -i ec2_key.pem -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} echo "SSH connection successful!"
