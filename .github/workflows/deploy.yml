@@ -71,7 +71,9 @@ jobs:
           docker pull pumplearn/backend:latest
 
           echo "Running the Docker container..."
-          docker run -d --name backend -p 8080:8080 pumplearn/backend:latest
+          docker run -d --name backend -p 8080:8080 \
+            --env-file /home/ubuntu/env/.env \
+            pumplearn/backend:latest
 
     # Step 8: Revoke Runner's IP Address from EC2 Security Group
     - name: Revoke Runner IP
