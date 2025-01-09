@@ -13,11 +13,18 @@ import (
 // InitDB initializes the database connection
 func InitDB() (*sql.DB, error) {
 
-	// Load environment variables from .env file
-	err := godotenv.Load(".env")
+	// // Load environment variables from .env file (DEVELOPMENT ONLY)
+	// err := godotenv.Load(".env")
+
+	// Load environment variables from runtime (PRODUCTION)
+	err := godotenv.Load()
 
 	if err != nil {
 		log.Fatalf("Error loading .env file")
+	}
+
+	for _, env := range os.Environ() {
+		fmt.Println(env)
 	}
 
 	// Get database credentials from environment variables
@@ -33,7 +40,7 @@ func InitDB() (*sql.DB, error) {
 	// Open the database connection
 	db, err := sql.Open("mysql", dsn)
 
-	// Development database
+	// // Development database
 	// db, err := sql.Open("mysql", "root:@/naturemate")
 
 	if err != nil {
