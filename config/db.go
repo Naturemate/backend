@@ -20,7 +20,7 @@ func InitDB() (*sql.DB, error) {
 	err := godotenv.Load()
 
 	if err != nil {
-		log.Fatalf("Error loading .env file")
+		log.Fatalf("Error loading .env file", err)
 	}
 
 	for _, env := range os.Environ() {
