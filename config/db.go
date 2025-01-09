@@ -7,7 +7,6 @@ import (
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/joho/godotenv"
 )
 
 // InitDB initializes the database connection
@@ -16,12 +15,9 @@ func InitDB() (*sql.DB, error) {
 	// // Load environment variables from .env file (DEVELOPMENT ONLY)
 	// err := godotenv.Load(".env")
 
-	// Load environment variables from runtime (PRODUCTION)
-	err := godotenv.Load()
-
-	if err != nil {
-		log.Fatalf("Error loading .env file: %s", err)
-	}
+	// if err != nil {
+	// 	log.Fatalf("Error loading .env file: %s", err)
+	// }
 
 	// Check if the environment variables are set
 	for _, env := range os.Environ() {
