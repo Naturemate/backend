@@ -14,15 +14,9 @@ func InitDB() (*sql.DB, error) {
 
 	// // Load environment variables from .env file (DEVELOPMENT ONLY)
 	// err := godotenv.Load(".env")
-
 	// if err != nil {
 	// 	log.Fatalf("Error loading .env file: %s", err)
 	// }
-
-	// Check if the environment variables are set
-	for _, env := range os.Environ() {
-		fmt.Println(env)
-	}
 
 	// Get database credentials from environment variables
 	username := os.Getenv("DB_USER")
@@ -33,6 +27,8 @@ func InitDB() (*sql.DB, error) {
 
 	// Create the DSN (Data Source Name)
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, host, port, dbName)
+
+	fmt.Println(dsn)
 
 	// Open the database connection
 	db, err := sql.Open("mysql", dsn)
