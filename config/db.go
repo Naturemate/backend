@@ -28,8 +28,6 @@ func InitDB() (*sql.DB, error) {
 	// Create the DSN (Data Source Name)
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", username, password, host, port, dbName)
 
-	fmt.Println(dsn)
-
 	// Open the database connection
 	db, err := sql.Open("mysql", dsn)
 
